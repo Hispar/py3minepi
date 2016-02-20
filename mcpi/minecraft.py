@@ -1,10 +1,10 @@
-from .connection import Connection,RequestError
+from .connection import Connection, RequestError
 from .vec3 import Vec3
-from .event import BlockEvent,ChatEvent
+from .event import BlockEvent, ChatEvent
 from .block import Block
 import math
 from os import environ
-from .util import flatten,floorFlatten
+from .util import flatten, floorFlatten
 
 """ Minecraft PI low level api v0.1_1
 
@@ -19,27 +19,27 @@ from .util import flatten,floorFlatten
     @author: Aron Nieminen, Mojang AB"""
 
 
-#def strFloor(*args):
-#    return [str(int(math.floor(x))) for x in flatten(args)]
-
 def fixPipe(s):
-    return s.replace('&#124;', '|').replace('&amp;','&')
+    return s.replace('&#124;', '|').replace('&amp;', '&')
 
-def stringToBlockWithNBT(s, pipeFix = False):
+
+def stringToBlockWithNBT(s, pipeFix=False):
     data = s.split(",")
     id = int(data[0])
     if len(data) <= 1:
         return Block(id)
     elif len(data) <= 2:
-        return Block(id,int(data[1]))
+        return Block(id, int(data[1]))
     else:
         nbt = ','.join(data[2:])
         if pipeFix:
             nbt = fixPipe(nbt)
-        return Block(id,int(data[1]),nbt)
+        return Block(id, int(data[1]), nbt)
+
 
 class CmdPositioner:
     """Methods for setting and getting positions"""
+
     def __init__(self, connection, packagePrefix):
         self.conn = connection
         self.pkg = packagePrefix
@@ -100,39 +100,52 @@ class CmdPositioner:
 
 class CmdEntity(CmdPositioner):
     """Methods for entities"""
+
     def __init__(self, connection):
         CmdPositioner.__init__(self, connection, "entity")
 
 
 class CmdPlayer(CmdPositioner):
     """Methods for the host (Raspberry Pi) player"""
+
     def __init__(self, connection, playerId=()):
-        CmdPositioner.__init__(self, connection, "player" if playerId==() else "entity")
+        CmdPositioner.__init__(self, connection, "player" if playerId == () else "entity")
         self.id = playerId
         self.conn = connection
 
     def getDirection(self):
         return CmdPositioner.getDirection(self, self.id)
+
     def getPitch(self):
         return CmdPositioner.getPitch(self, self.id)
+
     def getRotation(self):
         return CmdPositioner.getRotation(self, self.id)
+
     def setPitch(self, *args):
         return CmdPositioner.setPitch(self, self.id, args)
+
     def setRotation(self, *args):
         return CmdPositioner.setRotation(self, self.id, args)
+
     def setDirection(self, *args):
         return CmdPositioner.setDirection(self, self.id, args)
+
     def getRotation(self):
         return CmdPositioner.getRotation(self, self.id)
+
     def getPos(self):
         return CmdPositioner.getPos(self, self.id)
+
     def setPos(self, *args):
         return CmdPositioner.setPos(self, self.id, args)
+
     def getTilePos(self):
         return CmdPositioner.getTilePos(self, self.id)
+
     def setTilePos(self, *args):
         return CmdPositioner.setTilePos(self, self.id, args)
+
 
 class CmdCamera:
     def __init__(self, connection):
@@ -157,6 +170,7 @@ class CmdCamera:
 
 class CmdEvents:
     """Events"""
+
     def __init__(self, connection):
         self.conn = connection
 
@@ -176,6 +190,7 @@ class CmdEvents:
         events = [fixPipe(e) for e in s.split("|") if e]
         return [ChatEvent.Post(int(e[:e.find(",")]), e[e.find(",") + 1:]) for e in events]
 
+
 class Minecraft:
     """The main class to interact with a running instance of Minecraft Pi."""
 
@@ -189,15 +204,14 @@ class Minecraft:
         self.entity = CmdEntity(self.conn)
         if autoId:
             try:
-                 playerId = int(environ['MINECRAFT_PLAYER_ID'])
-                 self.player = CmdPlayer(self.conn,playerId=playerId)
+                playerId = int(environ['MINECRAFT_PLAYER_ID'])
+                self.player = CmdPlayer(self.conn, playerId=playerId)
             except:
-                 self.player = CmdPlayer(self.conn)
+                self.player = CmdPlayer(self.conn)
         else:
             self.player = CmdPlayer(self.conn)
         self.events = CmdEvents(self.conn)
         self.enabledNBT = False
-
 
     def spawnEntity(self, *args):
         """Spawn entity (type,x,y,z,tags) and get its id => id:int"""
@@ -222,7 +236,7 @@ class Minecraft:
         For this to work, you first need to do setting("include_nbt_with_data",1)
         """
         if not self.enabledNBT:
-            self.setting("include_nbt_with_data",1)
+            self.setting("include_nbt_with_data", 1)
             self.enabledNBT = True
             try:
                 ans = self.conn.sendReceive_flat("world.getBlockWithData", floorFlatten(args))
@@ -232,17 +246,18 @@ class Minecraft:
         else:
             ans = self.conn.sendReceive_flat("world.getBlockWithData", floorFlatten(args))
         return stringToBlockWithNBT(ans)
+
     """
         @TODO
     """
 
     def fallbackGetCuboid(self, getBlock, *args):
-        (x0,y0,z0,x1,y1,z1) = [int(math.floor(float(x))) for x in flatten(args)]
+        (x0, y0, z0, x1, y1, z1) = [int(math.floor(float(x))) for x in flatten(args)]
         out = []
-        for y in range(min(y0,y1),max(y0,y1)+1):
-            for x in range(min(x0,x1),max(x0,x1)+1):
-                for z in range(min(z0,z1),max(z0,z1)+1):
-                    out.append(getBlock(x,y,z))
+        for y in range(min(y0, y1), max(y0, y1) + 1):
+            for x in range(min(x0, x1), max(x0, x1) + 1):
+                for z in range(min(z0, z1), max(z0, z1) + 1):
+                    out.append(getBlock(x, y, z))
         return out
 
     def fallbackGetBlocksWithData(self, *args):
@@ -279,7 +294,7 @@ class Minecraft:
         """Get a cuboid of blocks (x0,y0,z0,x1,y1,z1) => [Block(id, meta, nbt)]"""
         try:
             if not self.enabledNBT:
-                self.setting("include_nbt_with_data",1)
+                self.setting("include_nbt_with_data", 1)
                 self.enabledNBT = True
                 try:
                     ans = self.conn.sendReceive_flat("world.getBlocksWithData", floorFlatten(args))
@@ -289,7 +304,7 @@ class Minecraft:
             else:
                 ans = self.conn.sendReceive_flat("world.getBlocksWithData", floorFlatten(args))
             ans = self.conn.sendReceive_flat("world.getBlocksWithData", floorFlatten(args))
-            return [stringToBlockWithNBT(x, pipeFix = True) for x in ans.split("|")]
+            return [stringToBlockWithNBT(x, pipeFix=True) for x in ans.split("|")]
         except:
             self.getBlocksWithNBT = self.fallbackGetBlocksWithNBT
             return self.fallbackGetBlocksWithNBT(*args)
@@ -302,7 +317,7 @@ class Minecraft:
     def setBlockWithNBT(self, *args):
         """Set block (x,y,z,id,data,nbt)"""
         data = list(flatten(args))
-        self.conn.send_flat("world.setBlock", list(floorFlatten(data[:5]))+data[5:])
+        self.conn.send_flat("world.setBlock", list(floorFlatten(data[:5])) + data[5:])
 
     # must have no NBT tags in Block instance
     def setBlocks(self, *args):
@@ -312,7 +327,7 @@ class Minecraft:
     def setBlocksWithNBT(self, *args):
         """Set a cuboid of blocks (x0,y0,z0,x1,y1,z1,id,data,nbt)"""
         data = list(flatten(args))
-        self.conn.send_flat("world.setBlocks", list(floorFlatten(data[:8]))+data[8:])
+        self.conn.send_flat("world.setBlocks", list(floorFlatten(data[:8])) + data[8:])
 
     def getHeight(self, *args):
         """Get the height of the world (x,z) => int"""
@@ -344,7 +359,7 @@ class Minecraft:
         self.conn.send("world.setting", setting, 1 if bool(status) else 0)
 
     @staticmethod
-    def create(address = None, port = None):
+    def create(address=None, port=None):
         return Minecraft(Connection(address, port))
 
 
