@@ -1,9 +1,9 @@
 py3minepi
 =========
 
-.. image:: https://secure.travis-ci.org/py3minepi/py3minepi.png?branch=master
+.. image:: https://secure.travis-ci.org/Hispar/py3minepi.png?branch=master
     :alt: Build status
-    :target: https://travis-ci.org/py3minepi/py3minepi
+    :target: https://travis-ci.org/Hispar/py3minepi
 
 `Minecraft: Pi Edition <http://pi.minecraft.net/>`__ is awesome.
 
