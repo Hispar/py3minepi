@@ -1,7 +1,7 @@
 py3minepi
 =========
 
-.. image:: https://secure.travis-ci.org/Hispar/py3minepi.png?branch=master
+.. image:: https://travis-ci.org/Hispar/py3minepi.svg?branch=master
     :alt: Build status
     :target: https://travis-ci.org/Hispar/py3minepi
 
